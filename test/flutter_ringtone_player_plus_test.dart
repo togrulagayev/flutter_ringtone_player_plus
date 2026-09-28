@@ -1,7 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_ringtone_player_plus/flutter_ringtone_player_plus.dart';
-import 'package:flutter_ringtone_player_plus/flutter_ringtone_player_plus_platform_interface.dart';
 import 'package:flutter_ringtone_player_plus/flutter_ringtone_player_plus_method_channel.dart';
+import 'package:flutter_ringtone_player_plus/flutter_ringtone_player_plus_platform_interface.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class MockFlutterRingtonePlayerPlusPlatform
@@ -12,15 +12,21 @@ class MockFlutterRingtonePlayerPlusPlatform
 }
 
 void main() {
-  final FlutterRingtonePlayerPlusPlatform initialPlatform = FlutterRingtonePlayerPlusPlatform.instance;
+  final FlutterRingtonePlayerPlusPlatform initialPlatform =
+      FlutterRingtonePlayerPlusPlatform.instance;
 
   test('$MethodChannelFlutterRingtonePlayerPlus is the default instance', () {
-    expect(initialPlatform, isInstanceOf<MethodChannelFlutterRingtonePlayerPlus>());
+    expect(
+      initialPlatform,
+      isInstanceOf<MethodChannelFlutterRingtonePlayerPlus>(),
+    );
   });
 
   test('getPlatformVersion', () async {
-    FlutterRingtonePlayerPlus flutterRingtonePlayerPlusPlugin = FlutterRingtonePlayerPlus();
-    MockFlutterRingtonePlayerPlusPlatform fakePlatform = MockFlutterRingtonePlayerPlusPlatform();
+    final FlutterRingtonePlayerPlus flutterRingtonePlayerPlusPlugin =
+        FlutterRingtonePlayerPlus();
+    final MockFlutterRingtonePlayerPlusPlatform fakePlatform =
+        MockFlutterRingtonePlayerPlusPlatform();
     FlutterRingtonePlayerPlusPlatform.instance = fakePlatform;
 
     expect(await flutterRingtonePlayerPlusPlugin.getPlatformVersion(), '42');

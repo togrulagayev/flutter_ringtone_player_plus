@@ -2,13 +2,15 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'flutter_ringtone_player_plus_method_channel.dart';
 
+/// The interface that platform implementations of this plugin must extend.
 abstract class FlutterRingtonePlayerPlusPlatform extends PlatformInterface {
   /// Constructs a FlutterRingtonePlayerPlusPlatform.
   FlutterRingtonePlayerPlusPlatform() : super(token: _token);
 
   static final Object _token = Object();
 
-  static FlutterRingtonePlayerPlusPlatform _instance = MethodChannelFlutterRingtonePlayerPlus();
+  static FlutterRingtonePlayerPlusPlatform _instance =
+      MethodChannelFlutterRingtonePlayerPlus();
 
   /// The default instance of [FlutterRingtonePlayerPlusPlatform] to use.
   ///
@@ -23,6 +25,7 @@ abstract class FlutterRingtonePlayerPlusPlatform extends PlatformInterface {
     _instance = instance;
   }
 
+  /// Returns the host platform version.
   Future<String?> getPlatformVersion() {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
