@@ -1,3 +1,4 @@
-## 0.0.1
+## Unreleased
 
-* TODO: Describe initial release.
+- Project setup: MIT license, package metadata, strict analysis and CI with
+  secret scanning.

@@ -4,7 +4,8 @@ import 'package:flutter/services.dart';
 import 'flutter_ringtone_player_plus_platform_interface.dart';
 
 /// An implementation of [FlutterRingtonePlayerPlusPlatform] that uses method channels.
-class MethodChannelFlutterRingtonePlayerPlus extends FlutterRingtonePlayerPlusPlatform {
+class MethodChannelFlutterRingtonePlayerPlus
+    extends FlutterRingtonePlayerPlusPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('flutter_ringtone_player_plus');
