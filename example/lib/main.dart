@@ -1,60 +1,66 @@
 import 'package:flutter/material.dart';
-
-import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:flutter_ringtone_player_plus/flutter_ringtone_player_plus.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(const ExampleApp());
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class ExampleApp extends StatelessWidget {
+  const ExampleApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-  final _flutterRingtonePlayerPlusPlugin = FlutterRingtonePlayerPlus();
-
-  @override
-  void initState() {
-    super.initState();
-    initPlatformState();
+  Widget build(BuildContext context) {
+    return const MaterialApp(home: PlayerPage());
   }
+}
 
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
+class PlayerPage extends StatelessWidget {
+  const PlayerPage({super.key});
+
+  final RingtonePlayer _player = const RingtonePlayer();
+
+  Future<void> _run(
+    BuildContext context,
+    Future<void> Function() action,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
     try {
-      platformVersion =
-          await _flutterRingtonePlayerPlusPlugin.getPlatformVersion() ??
-          'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
+      await action();
+    } on RingtoneException catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text('$error')));
     }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Plugin example app')),
-        body: Center(child: Text('Running on: $_platformVersion\n')),
+    return Scaffold(
+      appBar: AppBar(title: const Text('flutter_ringtone_player_plus')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          StreamBuilder<PlaybackState>(
+            stream: _player.stateChanges,
+            builder: (context, snapshot) => Text(
+              'State: ${snapshot.data?.name ?? 'idle'}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () => _run(context, _player.playAlarm),
+            child: const Text('Alarm'),
+          ),
+          FilledButton(
+            onPressed: () => _run(context, _player.playNotification),
+            child: const Text('Notification'),
+          ),
+          FilledButton(
+            onPressed: () => _run(context, _player.playRingtone),
+            child: const Text('Ringtone'),
+          ),
+          OutlinedButton(
+            onPressed: () => _run(context, _player.stop),
+            child: const Text('Stop'),
+          ),
+        ],
       ),
     );
   }

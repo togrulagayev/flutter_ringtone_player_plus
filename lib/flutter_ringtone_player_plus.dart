@@ -1,9 +1,14 @@
-import 'flutter_ringtone_player_plus_platform_interface.dart';
+/// Plays system ringtones, alarms, notification sounds and custom audio.
+library;
 
-/// Plays system ringtones, alarms and notification sounds.
-class FlutterRingtonePlayerPlus {
-  /// Returns the host platform version.
-  Future<String?> getPlatformVersion() {
-    return FlutterRingtonePlayerPlusPlatform.instance.getPlatformVersion();
-  }
-}
+export 'src/playback_options.dart' show PlaybackOptions, SoundUsage;
+export 'src/playback_state.dart' show PlaybackState;
+export 'src/ringtone_exception.dart' show RingtoneErrorCode, RingtoneException;
+export 'src/ringtone_player.dart' show RingtonePlayer;
+export 'src/ringtone_source.dart'
+    show
+        AssetRingtoneSource,
+        FileRingtoneSource,
+        RingtoneSource,
+        SystemRingtoneSource,
+        RingtoneType;
