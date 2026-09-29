@@ -8,6 +8,34 @@
 Play system ringtones, alarms, notification sounds and custom audio on Android
 and iOS, with looping, volume and playback state.
 
+## Usage
+
+```dart
+import 'package:flutter_ringtone_player_plus/flutter_ringtone_player_plus.dart';
+
+const player = RingtonePlayer();
+
+await player.playAlarm();
+await player.playNotification(volume: 0.5);
+await player.stop();
+```
+
+Play your own sound from an asset or a file, with the same options:
+
+```dart
+await player.play(
+  const RingtoneSource.asset('assets/sounds/bell.mp3'),
+  options: const PlaybackOptions(
+    volume: 0.6,
+    looping: true,
+    usage: SoundUsage.alarm,
+  ),
+);
+```
+
+`player.stateChanges` reports when a sound starts, completes or is stopped.
+Failures are thrown as `RingtoneException` with a `RingtoneErrorCode`.
+
 ## Why this package
 
 [`flutter_ringtone_player`](https://pub.dev/packages/flutter_ringtone_player)
@@ -44,7 +72,7 @@ Problems found in `flutter_ringtone_player` 4.0.0+4 that this package addresses:
 ## Roadmap
 
 - [x] Project setup: license, strict analysis, CI with secret scanning
-- [ ] Dart API: sound sources, playback options, typed errors, Pigeon channel
+- [x] Dart API: sound sources, playback options, typed errors, Pigeon channel
 - [ ] Android: Kotlin player with looping and volume on every API level
 - [ ] Android: audio focus, lifecycle handling, playback state
 - [ ] iOS: Swift player based on `AVAudioPlayer`

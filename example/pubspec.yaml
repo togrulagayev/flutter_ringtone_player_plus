@@ -3,7 +3,7 @@ description: "Demonstrates how to use the flutter_ringtone_player_plus plugin."
 publish_to: none
 
 environment:
-  sdk: ^3.8.0
+  sdk: ^3.11.0
 
 dependencies:
   cupertino_icons: ^1.0.8
