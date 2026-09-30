@@ -7,3 +7,7 @@
   `PlaybackState` stream and typed `RingtoneException`s.
 - Platform channel generated with Pigeon.
 - Requires Dart 3.11 / Flutter 3.41 or newer.
+- Android: native player built on `MediaPlayer`. Looping and volume work on
+  every supported Android version, `file://` URIs and compressed assets are
+  handled, and a missing default sound falls back to another sound on the
+  device.

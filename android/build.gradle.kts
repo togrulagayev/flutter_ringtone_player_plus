@@ -52,13 +52,8 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             all {
-                it.useJUnitPlatform()
-
-                it.outputs.upToDateWhen { false }
-
                 it.testLogging {
-                    events("passed", "skipped", "failed", "standardOut", "standardError")
-                    showStandardStreams = true
+                    events("passed", "skipped", "failed")
                 }
             }
         }
@@ -72,6 +67,10 @@ kotlin {
 }
 
 dependencies {
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.mockito:mockito-core:5.0.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:6.4.0")
+    testImplementation("org.robolectric:robolectric:4.17")
 }
