@@ -19,8 +19,10 @@ sealed class RingtoneSource {
 
   /// The device's default sound of the given [type].
   ///
-  /// iOS does not expose the sounds the user picked in Settings, so a
-  /// built-in system sound of the same kind is played there instead.
+  /// On Android, if the user has not set a default of that type, another
+  /// sound available on the device is played. iOS does not expose the sounds
+  /// the user picked in Settings, so a built-in system sound of the same kind
+  /// is played there instead.
   const factory RingtoneSource.system(RingtoneType type) = SystemRingtoneSource;
 
   /// An audio file bundled with the app as a Flutter asset, such as
