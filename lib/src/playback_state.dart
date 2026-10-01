@@ -8,6 +8,7 @@ enum PlaybackState {
   /// A sound that does not loop reached its end.
   completed,
 
-  /// A sound was stopped by [RingtonePlayer.stop] or replaced by a new one.
+  /// A sound was stopped by [RingtonePlayer.stop], replaced by a new one, or
+  /// interrupted by another app that took over audio playback.
   stopped,
 }

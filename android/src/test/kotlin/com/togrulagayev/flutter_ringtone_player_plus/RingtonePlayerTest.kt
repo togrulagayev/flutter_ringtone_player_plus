@@ -2,8 +2,10 @@ package com.togrulagayev.flutter_ringtone_player_plus
 
 import android.content.Context
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
+import android.os.Build
 import android.provider.Settings
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import java.io.File
@@ -25,6 +27,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -32,6 +35,8 @@ import org.robolectric.annotation.Config
 class RingtonePlayerTest {
     private val context: Context = RuntimeEnvironment.getApplication()
     private val mediaPlayers = mutableListOf<MediaPlayer>()
+    private val listener = RecordingListener()
+    private val audioManager = context.getSystemService(AudioManager::class.java)
 
     private val flutterAssets = object : FlutterPlugin.FlutterAssets {
         override fun getAssetFilePathByName(assetFileName: String) = "flutter_assets/$assetFileName"
@@ -47,7 +52,7 @@ class RingtonePlayerTest {
 
     private fun TestScope.newPlayer(
         ioDispatcher: CoroutineDispatcher = StandardTestDispatcher(testScheduler),
-    ) = RingtonePlayer(context, flutterAssets, ioDispatcher) {
+    ) = RingtonePlayer(context, flutterAssets, listener, ioDispatcher) {
         mock<MediaPlayer>().also { mediaPlayers += it }
     }
 
@@ -60,15 +65,34 @@ class RingtonePlayerTest {
         usage: PlatformSoundUsage = PlatformSoundUsage.NOTIFICATION,
     ) = PlatformPlayRequest(sourceType, ringtoneType, path, null, gain, looping, usage)
 
-    private fun fileRequest() = request(
+    private fun fileRequest(usage: PlatformSoundUsage = PlatformSoundUsage.NOTIFICATION) = request(
         PlatformSourceType.FILE,
         path = File.createTempFile("sound", ".wav", context.cacheDir).path,
+        usage = usage,
     )
 
     private fun MediaPlayer.finishPreparing() {
         val listener = argumentCaptor<MediaPlayer.OnPreparedListener>()
         verify(this).setOnPreparedListener(listener.capture())
         listener.firstValue.onPrepared(this)
+    }
+
+    private fun MediaPlayer.finishPlaying() {
+        val listener = argumentCaptor<MediaPlayer.OnCompletionListener>()
+        verify(this).setOnCompletionListener(listener.capture())
+        listener.firstValue.onCompletion(this)
+    }
+
+    private suspend fun TestScope.startPlaying(
+        player: RingtonePlayer,
+        request: PlatformPlayRequest = fileRequest(),
+    ): MediaPlayer {
+        val playing = async { player.play(request) }
+        runCurrent()
+        val mediaPlayer = mediaPlayers.last()
+        mediaPlayer.finishPreparing()
+        playing.await()
+        return mediaPlayer
     }
 
     private fun MediaPlayer.failWith(what: Int, extra: Int) {
@@ -234,6 +258,116 @@ class RingtonePlayerTest {
     }
 
     @Test
+    fun `reports playing, then completed, and releases the finished sound`() = runTest {
+        val mediaPlayer = startPlaying(newPlayer())
+        assertEquals(listOf(PlatformPlaybackState.PLAYING), listener.states)
+
+        mediaPlayer.finishPlaying()
+
+        assertEquals(
+            listOf(PlatformPlaybackState.PLAYING, PlatformPlaybackState.COMPLETED),
+            listener.states,
+        )
+        verify(mediaPlayer).release()
+    }
+
+    @Test
+    fun `reports stopped only for a sound that started`() = runTest {
+        val player = newPlayer()
+        val preparing = async { player.play(fileRequest()) }
+        runCurrent()
+        player.stop()
+        preparing.await()
+        assertTrue(listener.states.isEmpty())
+
+        startPlaying(player)
+        player.stop()
+
+        assertEquals(
+            listOf(PlatformPlaybackState.PLAYING, PlatformPlaybackState.STOPPED),
+            listener.states,
+        )
+    }
+
+    @Test
+    fun `a replaced sound reports stopped before the new one plays`() = runTest {
+        val player = newPlayer()
+        startPlaying(player)
+        startPlaying(player)
+
+        assertEquals(
+            listOf(
+                PlatformPlaybackState.PLAYING,
+                PlatformPlaybackState.STOPPED,
+                PlatformPlaybackState.PLAYING,
+            ),
+            listener.states,
+        )
+    }
+
+    @Test
+    fun `errors after playback started go to the event stream`() = runTest {
+        val mediaPlayer = startPlaying(newPlayer())
+
+        mediaPlayer.failWith(MediaPlayer.MEDIA_ERROR_UNKNOWN, MediaPlayer.MEDIA_ERROR_IO)
+
+        assertEquals(errorSourceNotFound, listener.errors.single().code)
+        verify(mediaPlayer).release()
+    }
+
+    @Test
+    fun `takes audio focus while playing and gives it back on stop`() = runTest {
+        val player = newPlayer()
+
+        startPlaying(player, fileRequest(PlatformSoundUsage.NOTIFICATION))
+        assertEquals(
+            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK,
+            shadowOf(audioManager).lastAudioFocusRequest.durationHint,
+        )
+
+        startPlaying(player, fileRequest(PlatformSoundUsage.ALARM))
+        assertEquals(
+            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT,
+            shadowOf(audioManager).lastAudioFocusRequest.durationHint,
+        )
+
+        player.stop()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            assertEquals(
+                shadowOf(audioManager).lastAudioFocusRequest.audioFocusRequest,
+                shadowOf(audioManager).lastAbandonedAudioFocusRequest,
+            )
+        } else {
+            assertEquals(
+                shadowOf(audioManager).lastAudioFocusRequest.listener,
+                shadowOf(audioManager).lastAbandonedAudioFocusListener,
+            )
+        }
+    }
+
+    @Test
+    fun `stops when another app takes audio focus for good`() = runTest {
+        val mediaPlayer = startPlaying(newPlayer())
+
+        shadowOf(audioManager).lastAudioFocusRequest.listener
+            .onAudioFocusChange(AudioManager.AUDIOFOCUS_LOSS)
+
+        verify(mediaPlayer).release()
+        assertEquals(PlatformPlaybackState.STOPPED, listener.states.last())
+    }
+
+    @Test
+    fun `keeps playing through a transient focus loss`() = runTest {
+        val mediaPlayer = startPlaying(newPlayer())
+
+        shadowOf(audioManager).lastAudioFocusRequest.listener
+            .onAudioFocusChange(AudioManager.AUDIOFOCUS_LOSS_TRANSIENT)
+
+        verify(mediaPlayer, never()).release()
+        assertEquals(listOf(PlatformPlaybackState.PLAYING), listener.states)
+    }
+
+    @Test
     fun `maps each usage to audio attributes`() {
         val expected = mapOf(
             PlatformSoundUsage.ALARM to
@@ -271,5 +405,18 @@ private class ManualDispatcher : CoroutineDispatcher() {
 
     fun runQueued() {
         while (queue.isNotEmpty()) queue.removeFirst().run()
+    }
+}
+
+private class RecordingListener : PlaybackListener {
+    val states = mutableListOf<PlatformPlaybackState>()
+    val errors = mutableListOf<FlutterError>()
+
+    override fun onStateChanged(state: PlatformPlaybackState) {
+        states += state
+    }
+
+    override fun onError(error: FlutterError) {
+        errors += error
     }
 }

@@ -11,3 +11,6 @@
   every supported Android version, `file://` URIs and compressed assets are
   handled, and a missing default sound falls back to another sound on the
   device.
+- Android: audio focus while a sound plays (other apps duck for notification
+  sounds and pause otherwise), `stateChanges` events, and finished sounds
+  release their player automatically.

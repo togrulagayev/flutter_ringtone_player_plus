@@ -8,6 +8,10 @@ import 'ringtone_source.dart';
 ///
 /// One sound plays at a time: starting a new sound stops the current one.
 /// Every instance controls the same underlying player.
+///
+/// While a sound plays, other apps lower their volume for notification
+/// sounds and pause for every other [SoundUsage]. If another app takes over
+/// audio playback for good, the sound stops.
 class RingtonePlayer {
   /// Creates a player.
   const RingtonePlayer();
