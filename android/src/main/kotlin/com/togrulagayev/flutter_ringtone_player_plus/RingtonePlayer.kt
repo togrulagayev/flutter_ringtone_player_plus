@@ -3,6 +3,7 @@ package com.togrulagayev.flutter_ringtone_player_plus
 import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
@@ -21,12 +22,15 @@ import kotlinx.coroutines.withContext
 internal class RingtonePlayer(
     private val context: Context,
     private val flutterAssets: FlutterPlugin.FlutterAssets,
+    private val listener: PlaybackListener,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val createMediaPlayer: () -> MediaPlayer = ::MediaPlayer,
 ) : RingtonePlayerHostApi {
 
+    private val audioFocus = AudioFocus(context.getSystemService(AudioManager::class.java)) { stop() }
     private var mediaPlayer: MediaPlayer? = null
     private var pendingStart: CancellableContinuation<Unit>? = null
+    private var started = false
     private var requestId = 0
 
     override suspend fun play(request: PlatformPlayRequest) {
@@ -38,10 +42,11 @@ internal class RingtonePlayer(
         }
         release()
 
+        val attributes = audioAttributes(request.usage)
         val player = createMediaPlayer()
         mediaPlayer = player
         try {
-            player.setAudioAttributes(audioAttributes(request.usage))
+            player.setAudioAttributes(attributes)
             source.applyTo(player, context)
             player.isLooping = request.looping
             player.setVolume(request.gain.toFloat(), request.gain.toFloat())
@@ -60,16 +65,22 @@ internal class RingtonePlayer(
             continuation.invokeOnCancellation { release() }
             player.setOnPreparedListener {
                 pendingStart = null
+                audioFocus.request(request.usage, attributes)
                 it.start()
+                started = true
+                listener.onStateChanged(PlatformPlaybackState.PLAYING)
                 continuation.resume(Unit)
             }
+            player.setOnCompletionListener {
+                release(notifyStopped = false)
+                listener.onStateChanged(PlatformPlaybackState.COMPLETED)
+            }
             player.setOnErrorListener { _, what, extra ->
+                val error = FlutterError(errorCodeFor(extra), "MediaPlayer error ($what, $extra)")
                 val pending = pendingStart
                 pendingStart = null
-                release()
-                pending?.resumeWithException(
-                    FlutterError(errorCodeFor(extra), "MediaPlayer error ($what, $extra)"),
-                )
+                release(notifyStopped = false)
+                if (pending != null) pending.resumeWithException(error) else listener.onError(error)
                 true
             }
             player.prepareAsync()
@@ -81,14 +92,23 @@ internal class RingtonePlayer(
         release()
     }
 
-    private fun release() {
+    fun dispose() {
+        requestId++
+        release(notifyStopped = false)
+    }
+
+    private fun release(notifyStopped: Boolean = true) {
         pendingStart?.let {
             pendingStart = null
             it.resume(Unit)
         }
-        mediaPlayer?.let {
-            mediaPlayer = null
-            it.release()
+        val player = mediaPlayer ?: return
+        mediaPlayer = null
+        player.release()
+        audioFocus.abandon()
+        if (started) {
+            started = false
+            if (notifyStopped) listener.onStateChanged(PlatformPlaybackState.STOPPED)
         }
     }
 

@@ -6,14 +6,16 @@ class FlutterRingtonePlayerPlusPlugin : FlutterPlugin {
     private var player: RingtonePlayer? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        val player = RingtonePlayer(binding.applicationContext, binding.flutterAssets)
+        val events = PlaybackEvents()
+        PlaybackStatesStreamHandler.register(binding.binaryMessenger, events)
+        val player = RingtonePlayer(binding.applicationContext, binding.flutterAssets, events)
         RingtonePlayerHostApi.setUp(binding.binaryMessenger, player)
         this.player = player
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         RingtonePlayerHostApi.setUp(binding.binaryMessenger, null)
-        player?.stop()
+        player?.dispose()
         player = null
     }
 }
