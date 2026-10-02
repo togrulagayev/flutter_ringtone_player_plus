@@ -14,3 +14,6 @@
 - Android: audio focus while a sound plays (other apps duck for notification
   sounds and pause otherwise), `stateChanges` events, and finished sounds
   release their player automatically.
+- iOS: native player built on `AVAudioPlayer`. System sounds, assets and files
+  loop, follow the volume and stop on request, the audio session matches each
+  `SoundUsage`, and `stateChanges` events are reported.
