@@ -17,3 +17,6 @@
 - iOS: native player built on `AVAudioPlayer`. System sounds, assets and files
   loop, follow the volume and stop on request, the audio session matches each
   `SoundUsage`, and `stateChanges` events are reported.
+- iOS: a phone call or another audio interruption stops the sound and reports
+  `stopped`. Swift Package Manager and CocoaPods are both supported, and the
+  plugin ships a privacy manifest.

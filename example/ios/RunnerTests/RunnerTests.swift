@@ -84,11 +84,52 @@ final class RingtonePlayerTests: XCTestCase {
     }
   }
 
+  func testAnInterruptionStopsTheSound() async throws {
+    try await player.play(request: fileRequest(makeWav(seconds: 1), looping: true))
+
+    postSessionNotification(
+      AVAudioSession.interruptionNotification,
+      userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue])
+    await drainMainQueue()
+
+    XCTAssertEqual(listener.states, [.playing, .stopped])
+  }
+
+  func testTheEndOfAnInterruptionChangesNothing() async throws {
+    try await player.play(request: fileRequest(makeWav(seconds: 1), looping: true))
+
+    postSessionNotification(
+      AVAudioSession.interruptionNotification,
+      userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.ended.rawValue])
+    await drainMainQueue()
+
+    XCTAssertEqual(listener.states, [.playing])
+  }
+
+  func testAMediaServicesResetStopsTheSound() async throws {
+    try await player.play(request: fileRequest(makeWav(seconds: 1), looping: true))
+
+    postSessionNotification(AVAudioSession.mediaServicesWereResetNotification)
+    await drainMainQueue()
+
+    XCTAssertEqual(listener.states, [.playing, .stopped])
+  }
+
   func testSessionConfigurationForEachUsage() {
     XCTAssertEqual(RingtonePlayer.sessionConfiguration(for: .alarm).category, .playback)
     XCTAssertEqual(RingtonePlayer.sessionConfiguration(for: .media).category, .playback)
     XCTAssertEqual(RingtonePlayer.sessionConfiguration(for: .ringtone).category, .soloAmbient)
     XCTAssertEqual(RingtonePlayer.sessionConfiguration(for: .notification).category, .ambient)
+  }
+
+  private func postSessionNotification(_ name: Notification.Name, userInfo: [AnyHashable: Any]? = nil) {
+    NotificationCenter.default.post(name: name, object: AVAudioSession.sharedInstance(), userInfo: userInfo)
+  }
+
+  private func drainMainQueue() async {
+    await withCheckedContinuation { continuation in
+      DispatchQueue.main.async { continuation.resume() }
+    }
   }
 
   private func fileRequest(_ url: URL, looping: Bool = false) -> PlatformPlayRequest {

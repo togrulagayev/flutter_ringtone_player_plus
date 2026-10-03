@@ -76,7 +76,7 @@ Problems found in `flutter_ringtone_player` 4.0.0+4 that this package addresses:
 - [x] Android: Kotlin player with looping and volume on every API level
 - [x] Android: audio focus, lifecycle handling, playback state
 - [x] iOS: Swift player based on `AVAudioPlayer`, with playback state
-- [ ] iOS: interruptions, Swift Package Manager and CocoaPods
+- [x] iOS: interruptions, privacy manifest, Swift Package Manager and CocoaPods
 - [ ] Example app and integration tests
 - [ ] Compatibility layer and migration guide from `flutter_ringtone_player`
 - [ ] Full CI: platform builds, pub.dev score check, coverage
