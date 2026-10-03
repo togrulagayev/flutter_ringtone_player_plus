@@ -23,6 +23,15 @@ final class RingtonePlayer: NSObject, RingtonePlayerHostApi {
     self.assetPath = assetPath
     self.listener = listener
     self.session = session
+    super.init()
+
+    let center = NotificationCenter.default
+    center.addObserver(
+      self, selector: #selector(handleInterruption(_:)),
+      name: AVAudioSession.interruptionNotification, object: session)
+    center.addObserver(
+      self, selector: #selector(handleMediaServicesReset(_:)),
+      name: AVAudioSession.mediaServicesWereResetNotification, object: session)
   }
 
   func play(request: PlatformPlayRequest) async throws {
@@ -72,6 +81,17 @@ final class RingtonePlayer: NSObject, RingtonePlayerHostApi {
     player.stop()
     if shouldDeactivate { deactivateSession() }
     if notifyStopped { listener.onStateChanged(.stopped) }
+  }
+
+  @objc private func handleInterruption(_ notification: Notification) {
+    guard let rawType = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+      AVAudioSession.InterruptionType(rawValue: rawType) == .began
+    else { return }
+    DispatchQueue.main.async { [weak self] in self?.release(notifyStopped: true) }
+  }
+
+  @objc private func handleMediaServicesReset(_ notification: Notification) {
+    DispatchQueue.main.async { [weak self] in self?.release(notifyStopped: true) }
   }
 
   private func deactivateSession() {

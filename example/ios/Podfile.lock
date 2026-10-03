@@ -20,7 +20,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
-  flutter_ringtone_player_plus: d44fec66405ab903197ecc92e75b2e6ce656e387
+  flutter_ringtone_player_plus: d6beff5ae58e0b3abcc6fb18051a46aab3a3908d
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
 
 PODFILE CHECKSUM: 3ba3a73b1b12adcf321a227a745625fe0888cc82
