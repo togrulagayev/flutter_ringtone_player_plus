@@ -1,4 +1,4 @@
-## Unreleased
+## 1.0.0
 
 - Project setup: MIT license, package metadata, strict analysis and CI with
   secret scanning.

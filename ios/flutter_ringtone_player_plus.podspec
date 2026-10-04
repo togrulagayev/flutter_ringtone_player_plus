@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'flutter_ringtone_player_plus'
-  s.version          = '0.1.0'
+  s.version          = '1.0.0'
   s.summary          = 'Play system ringtones, alarms, notification sounds and custom audio on Android and iOS, with looping, volume and playback state.'
   s.description      = <<-DESC
 Play system ringtones, alarms, notification sounds and custom audio on Android and iOS, with looping, volume and playback state.
