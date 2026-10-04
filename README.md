@@ -8,6 +8,31 @@
 Play system ringtones, alarms, notification sounds and custom audio on Android
 and iOS, with looping, volume and playback state.
 
+<p align="center">
+  <img src="doc/screenshot.png" alt="The example app playing an alarm" width="280">
+</p>
+
+## Features
+
+- The device's default alarm, notification and ringtone sounds
+- Flutter assets and audio files from the device
+- Looping, a volume scale that matches how loud sounds are perceived, and
+  alarm, notification, ringtone or media audio
+- Playback events and typed errors
+- Audio focus on Android, audio session and interruption handling on iOS
+- The API of `flutter_ringtone_player`, so migrating takes one import change
+
+## Platform support
+
+|  | Android | iOS |
+| --- | --- | --- |
+| Minimum version | 7.0 (API 24) | 15.0 |
+| Default sounds | The user's chosen sounds | Built-in sounds |
+| Assets and files | ✓ | ✓ |
+| Looping, volume and stop | ✓ | ✓ |
+| Playback events | ✓ | ✓ |
+| Swift Package Manager | – | ✓ |
+
 ## Usage
 
 ```dart
@@ -33,8 +58,73 @@ await player.play(
 );
 ```
 
-`player.stateChanges` reports when a sound starts, completes or is stopped.
-Failures are thrown as `RingtoneException` with a `RingtoneErrorCode`.
+Listen for playback events, and catch errors when a sound cannot be played:
+
+```dart
+player.stateChanges.listen((state) {
+  // PlaybackState.playing, completed or stopped
+});
+
+try {
+  await player.play(RingtoneSource.file(path));
+} on RingtoneException catch (error) {
+  // error.code is a RingtoneErrorCode, such as sourceNotFound
+}
+```
+
+## Platform notes
+
+**Android.** Default sounds are the ones the user picked in Settings. If one is
+not set, another sound available on the device is played. While a sound plays,
+the player holds audio focus: other apps lower their volume for notification
+sounds and pause for everything else.
+
+**iOS.** Apps cannot access the user's ringtone or alarm, so default sounds are
+built-in system sounds. Pick another one with `iosSound`:
+
+```dart
+await player.play(
+  const RingtoneSource.system(
+    RingtoneType.notification,
+    iosSound: IosSystemSound.glass,
+  ),
+);
+```
+
+Alarm and media sounds play even when the device is set to silent;
+notification sounds and ringtones follow the silent switch. A phone call or
+another audio interruption stops the sound. To keep a sound playing while your
+app is in the background, add `audio` to `UIBackgroundModes` in `Info.plist`.
+
+## Testing
+
+Replace the player with a fake in your widget tests through the platform
+interface:
+
+```dart
+import 'package:flutter_ringtone_player_plus/flutter_ringtone_player_plus.dart';
+import 'package:flutter_ringtone_player_plus/platform_interface.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+
+class FakeRingtonePlayer extends RingtonePlayerPlatform
+    with MockPlatformInterfaceMixin {
+  final played = <RingtoneSource>[];
+
+  @override
+  Future<void> play(RingtoneSource source, PlaybackOptions options) async =>
+      played.add(source);
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Stream<PlaybackState> get stateChanges => const Stream.empty();
+}
+
+void main() {
+  setUp(() => RingtonePlayerPlatform.instance = FakeRingtonePlayer());
+}
+```
 
 ## Migrating from flutter_ringtone_player
 
@@ -83,9 +173,9 @@ Android API 36 support are still open.
 instead of Java and Objective-C, a type-safe platform channel, tests on every
 layer, and a migration path from the original API.
 
-## What gets fixed
+## What's fixed
 
-Problems found in `flutter_ringtone_player` 4.0.0+4 that this package addresses:
+Problems in `flutter_ringtone_player` 4.0.0+4 that this package fixes:
 
 | Problem in the original | Upstream issue |
 | --- | --- |
@@ -115,7 +205,7 @@ Problems found in `flutter_ringtone_player` 4.0.0+4 that this package addresses:
 - [x] iOS: interruptions, privacy manifest, Swift Package Manager and CocoaPods
 - [x] Example app and integration tests
 - [x] Compatibility layer and migration guide from `flutter_ringtone_player`
-- [ ] Full CI: platform builds, pub.dev score check, coverage
+- [x] Full CI: platform builds, integration tests, pub.dev score check, coverage
 - [ ] macOS and web support
 - [ ] 1.0.0 release
 

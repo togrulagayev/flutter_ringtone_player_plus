@@ -38,7 +38,42 @@ jobs:
         run: flutter analyze
 
       - name: Run tests
+        run: flutter test --coverage
+
+      - name: Check coverage
+        run: |
+          coverage=$(awk -F: '/^SF:/ {file = $2}
+            /^LF:/ && file !~ /\.g\.dart$/ {found += $2}
+            /^LH:/ && file !~ /\.g\.dart$/ {hit += $2}
+            END {printf "%.1f", 100 * hit / found}' coverage/lcov.info)
+          echo "Line coverage: ${coverage}%" >> "$GITHUB_STEP_SUMMARY"
+          awk -v coverage="$coverage" 'BEGIN {exit !(coverage >= 95)}'
+
+      - name: Run example tests
+        working-directory: example
         run: flutter test
+
+  pana:
+    name: pub.dev score
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install pana
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y webp
+          dart pub global activate pana
+
+      - name: Score the package as pub.dev would
+        run: |
+          sed -i '/^publish_to: none$/d' pubspec.yaml
+          dart pub global run pana --no-warning --exit-code-threshold 0 .
 
   android:
     name: Android unit tests
@@ -56,13 +91,88 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Generate Gradle project
+      - name: Build example app
         working-directory: example
-        run: flutter build apk --config-only
+        run: flutter build apk --debug
 
       - name: Run tests
         working-directory: example/android
         run: ./gradlew :flutter_ringtone_player_plus:testDebugUnitTest
+
+  android-integration:
+    name: Android integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost "$AGENT_TOOLSDIRECTORY/CodeQL"
+          df -h /
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          disk-size: 4096M
+          working-directory: example
+          script: flutter test integration_test -d emulator-5554
+
+  ios:
+    name: iOS
+    if: ${{ !github.event.repository.private }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Boot a simulator
+        run: |
+          udid=$(xcrun simctl list devices available --json \
+            | jq -r '[.devices[][] | select(.name | startswith("iPhone"))][0].udid')
+          xcrun simctl boot "$udid"
+          echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
+
+      - name: Install pods
+        working-directory: example
+        run: flutter build ios --simulator --debug --config-only
+
+      - name: Run unit tests
+        working-directory: example/ios
+        run: |
+          xcodebuild test -workspace Runner.xcworkspace -scheme Runner \
+            -destination "id=$SIMULATOR" -parallel-testing-enabled YES
+
+      - name: Run integration tests
+        working-directory: example
+        run: flutter test integration_test -d "$SIMULATOR"
+
+      - name: Build with Swift Package Manager
+        working-directory: example
+        run: |
+          printf '  config:\n    enable-swift-package-manager: true\n' >> pubspec.yaml
+          flutter build ios --simulator --debug
 
   secrets:
     name: Secret scan
