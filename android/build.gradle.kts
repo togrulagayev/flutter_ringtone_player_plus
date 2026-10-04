@@ -2,7 +2,7 @@ group = "com.togrulagayev.flutter_ringtone_player_plus"
 version = "1.0-SNAPSHOT"
 
 buildscript {
-    val kotlinVersion = "2.4.0"
+    val kotlinVersion = "2.4.20"
     repositories {
         google()
         mavenCentral()
