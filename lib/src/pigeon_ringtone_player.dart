@@ -70,9 +70,12 @@ class PigeonRingtonePlayer extends RingtonePlayerPlatform {
       options.usageFor(source).name,
     );
     return switch (source) {
-      SystemRingtoneSource(:final type) => PlatformPlayRequest(
+      SystemRingtoneSource(:final type, :final iosSound) => PlatformPlayRequest(
         sourceType: PlatformSourceType.system,
         ringtoneType: PlatformRingtoneType.values.byName(type.name),
+        iosSound: iosSound == null
+            ? null
+            : PlatformIosSound.values.byName(iosSound.name),
         gain: gain,
         looping: options.looping,
         usage: usage,

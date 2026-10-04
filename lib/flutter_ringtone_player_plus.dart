@@ -9,6 +9,7 @@ export 'src/ringtone_source.dart'
     show
         AssetRingtoneSource,
         FileRingtoneSource,
+        IosSystemSound,
         RingtoneSource,
-        SystemRingtoneSource,
-        RingtoneType;
+        RingtoneType,
+        SystemRingtoneSource;

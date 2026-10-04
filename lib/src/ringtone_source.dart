@@ -12,6 +12,45 @@ enum RingtoneType {
   ringtone,
 }
 
+/// A built-in iOS sound that [RingtoneSource.system] can play on iOS.
+enum IosSystemSound {
+  /// The "new mail" sound.
+  newMail,
+
+  /// The "mail sent" sound.
+  mailSent,
+
+  /// The "received message" sound.
+  receivedMessage,
+
+  /// The "sent message" sound.
+  sentMessage,
+
+  /// The alarm sound. The default for [RingtoneType.alarm].
+  alarm,
+
+  /// The "low power" sound.
+  lowPower,
+
+  /// Tri-tone. The default for [RingtoneType.notification].
+  triTone,
+
+  /// Chime.
+  chime,
+
+  /// Glass.
+  glass,
+
+  /// Horn.
+  horn,
+
+  /// Bell.
+  bell,
+
+  /// Electronic. The default for [RingtoneType.ringtone].
+  electronic,
+}
+
 /// Where a sound comes from.
 @immutable
 sealed class RingtoneSource {
@@ -21,9 +60,12 @@ sealed class RingtoneSource {
   ///
   /// On Android, if the user has not set a default of that type, another
   /// sound available on the device is played. iOS does not expose the sounds
-  /// the user picked in Settings, so a built-in system sound of the same kind
-  /// is played there instead.
-  const factory RingtoneSource.system(RingtoneType type) = SystemRingtoneSource;
+  /// the user picked in Settings, so a built-in sound is played there instead:
+  /// [iosSound] if set, otherwise the default listed in [IosSystemSound].
+  const factory RingtoneSource.system(
+    RingtoneType type, {
+    IosSystemSound? iosSound,
+  }) = SystemRingtoneSource;
 
   /// An audio file bundled with the app as a Flutter asset, such as
   /// `assets/sounds/bell.mp3`.
@@ -40,20 +82,27 @@ sealed class RingtoneSource {
 /// A [RingtoneSource] that plays one of the device's default sounds.
 final class SystemRingtoneSource extends RingtoneSource {
   /// Creates a source for the default sound of the given [type].
-  const SystemRingtoneSource(this.type);
+  const SystemRingtoneSource(this.type, {this.iosSound});
 
   /// Which default sound to play.
   final RingtoneType type;
 
+  /// The built-in sound to play on iOS, or null for the default of [type].
+  final IosSystemSound? iosSound;
+
   @override
   bool operator ==(Object other) =>
-      other is SystemRingtoneSource && other.type == type;
+      other is SystemRingtoneSource &&
+      other.type == type &&
+      other.iosSound == iosSound;
 
   @override
-  int get hashCode => type.hashCode;
+  int get hashCode => Object.hash(type, iosSound);
 
   @override
-  String toString() => 'RingtoneSource.system(${type.name})';
+  String toString() => iosSound == null
+      ? 'RingtoneSource.system(${type.name})'
+      : 'RingtoneSource.system(${type.name}, iosSound: ${iosSound!.name})';
 }
 
 /// A [RingtoneSource] that plays a Flutter asset.

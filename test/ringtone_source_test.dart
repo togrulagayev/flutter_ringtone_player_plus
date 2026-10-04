@@ -37,6 +37,15 @@ void main() {
     );
     expect(RingtoneSource.file('/a.mp3'), RingtoneSource.file('file:///a.mp3'));
     expect(
+      const RingtoneSource.system(RingtoneType.alarm),
+      isNot(
+        const RingtoneSource.system(
+          RingtoneType.alarm,
+          iosSound: IosSystemSound.bell,
+        ),
+      ),
+    );
+    expect(
       const RingtoneSource.asset('assets/a.mp3'),
       isNot(const RingtoneSource.asset('assets/a.mp3', package: 'sounds')),
     );

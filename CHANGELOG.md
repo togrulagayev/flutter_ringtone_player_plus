@@ -20,3 +20,8 @@
 - iOS: a phone call or another audio interruption stops the sound and reports
   `stopped`. Swift Package Manager and CocoaPods are both supported, and the
   plugin ships a privacy manifest.
+- `IosSystemSound` chooses which built-in sound `RingtoneSource.system` plays on
+  iOS.
+- `package:flutter_ringtone_player_plus/flutter_ringtone_player.dart` provides
+  the API of `flutter_ringtone_player`, so migrating takes a single import
+  change.
