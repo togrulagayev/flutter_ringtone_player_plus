@@ -1,9 +1,9 @@
 # flutter_ringtone_player_plus
 
+[![pub package](https://img.shields.io/pub/v/flutter_ringtone_player_plus.svg)](https://pub.dev/packages/flutter_ringtone_player_plus)
+[![pub points](https://img.shields.io/pub/points/flutter_ringtone_player_plus)](https://pub.dev/packages/flutter_ringtone_player_plus/score)
 [![CI](https://github.com/togrulagayev/flutter_ringtone_player_plus/actions/workflows/ci.yml/badge.svg)](https://github.com/togrulagayev/flutter_ringtone_player_plus/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
-> **Work in progress.** Not published on pub.dev yet. The API below may still change.
 
 Play system ringtones, alarms, notification sounds and custom audio on Android
 and iOS, with looping, volume and playback state.
@@ -32,6 +32,8 @@ and iOS, with looping, volume and playback state.
 | Looping, volume and stop | ✓ | ✓ |
 | Playback events | ✓ | ✓ |
 | Swift Package Manager | – | ✓ |
+
+macOS and web support is planned.
 
 ## Usage
 
@@ -194,20 +196,6 @@ Problems in `flutter_ringtone_player` 4.0.0+4 that this package fixes:
 | **iOS:** `stop()` does not stop system sounds, and sounds are capped at 30 seconds | – |
 | **iOS:** `fromFile` paths are looked up as Flutter assets | – |
 | **iOS:** no Swift Package Manager support | – |
-
-## Roadmap
-
-- [x] Project setup: license, strict analysis, CI with secret scanning
-- [x] Dart API: sound sources, playback options, typed errors, Pigeon channel
-- [x] Android: Kotlin player with looping and volume on every API level
-- [x] Android: audio focus, lifecycle handling, playback state
-- [x] iOS: Swift player based on `AVAudioPlayer`, with playback state
-- [x] iOS: interruptions, privacy manifest, Swift Package Manager and CocoaPods
-- [x] Example app and integration tests
-- [x] Compatibility layer and migration guide from `flutter_ringtone_player`
-- [x] Full CI: platform builds, integration tests, pub.dev score check, coverage
-- [ ] macOS and web support
-- [ ] 1.0.0 release
 
 ## Credits
 

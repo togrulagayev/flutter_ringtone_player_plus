@@ -1,27 +1,17 @@
 ## 1.0.0
 
-- Project setup: MIT license, package metadata, strict analysis and CI with
-  secret scanning.
-- New API: `RingtonePlayer`, `RingtoneSource` (system, asset, file),
-  `PlaybackOptions` with perceptual volume, looping and `SoundUsage`, a
-  `PlaybackState` stream and typed `RingtoneException`s.
-- Platform channel generated with Pigeon.
-- Requires Dart 3.11 / Flutter 3.41 or newer.
-- Android: native player built on `MediaPlayer`. Looping and volume work on
-  every supported Android version, `file://` URIs and compressed assets are
-  handled, and a missing default sound falls back to another sound on the
-  device.
-- Android: audio focus while a sound plays (other apps duck for notification
-  sounds and pause otherwise), `stateChanges` events, and finished sounds
-  release their player automatically.
-- iOS: native player built on `AVAudioPlayer`. System sounds, assets and files
-  loop, follow the volume and stop on request, the audio session matches each
-  `SoundUsage`, and `stateChanges` events are reported.
-- iOS: a phone call or another audio interruption stops the sound and reports
-  `stopped`. Swift Package Manager and CocoaPods are both supported, and the
-  plugin ships a privacy manifest.
-- `IosSystemSound` chooses which built-in sound `RingtoneSource.system` plays on
-  iOS.
+First release: a maintained rewrite of `flutter_ringtone_player`.
+
+- `RingtonePlayer` plays the device's default alarm, notification and ringtone
+  sounds, Flutter assets and audio files, with looping, a perceptual volume
+  scale and a `SoundUsage` for each sound.
+- `stateChanges` reports when a sound starts, completes or is stopped, and
+  failures throw a `RingtoneException` with a `RingtoneErrorCode`.
+- Android: built on `MediaPlayer`, with looping and volume from API 24 and
+  audio focus while a sound plays.
+- iOS: built on `AVAudioPlayer`, with an audio session for each `SoundUsage`,
+  interruption handling, a choice of built-in sounds through `IosSystemSound`,
+  Swift Package Manager support and a privacy manifest.
 - `package:flutter_ringtone_player_plus/flutter_ringtone_player.dart` provides
-  the API of `flutter_ringtone_player`, so migrating takes a single import
-  change.
+  the API of `flutter_ringtone_player`, so migrating takes one import change.
+- Requires Dart 3.11 and Flutter 3.41 or newer.

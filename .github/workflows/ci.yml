@@ -71,9 +71,7 @@ jobs:
           dart pub global activate pana
 
       - name: Score the package as pub.dev would
-        run: |
-          sed -i '/^publish_to: none$/d' pubspec.yaml
-          dart pub global run pana --no-warning --exit-code-threshold 0 .
+        run: dart pub global run pana --no-warning --exit-code-threshold 0 .
 
   android:
     name: Android unit tests
