@@ -6,11 +6,11 @@ environment:
   sdk: ^3.11.0
 
 dependencies:
-  cupertino_icons: ^1.0.8
   flutter:
     sdk: flutter
   flutter_ringtone_player_plus:
     path: ../
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_lints: ^6.0.0
@@ -18,6 +18,9 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
+  plugin_platform_interface: ^2.1.8
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/sounds/
