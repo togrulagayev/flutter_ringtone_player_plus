@@ -50,6 +50,28 @@ void main() {
       );
     });
 
+    test('for a system sound with a chosen iOS sound', () async {
+      await player.play(
+        const RingtoneSource.system(
+          RingtoneType.notification,
+          iosSound: IosSystemSound.glass,
+        ),
+        const PlaybackOptions(),
+      );
+
+      expect(
+        hostApi.requests.single,
+        PlatformPlayRequest(
+          sourceType: PlatformSourceType.system,
+          ringtoneType: PlatformRingtoneType.notification,
+          iosSound: PlatformIosSound.glass,
+          gain: 1,
+          looping: false,
+          usage: PlatformSoundUsage.notification,
+        ),
+      );
+    });
+
     test('for an asset from another package', () async {
       await player.play(
         const RingtoneSource.asset('assets/bell.mp3', package: 'sounds'),

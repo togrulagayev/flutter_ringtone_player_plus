@@ -63,7 +63,14 @@ class RingtonePlayerTest {
         gain: Double = 1.0,
         looping: Boolean = false,
         usage: PlatformSoundUsage = PlatformSoundUsage.NOTIFICATION,
-    ) = PlatformPlayRequest(sourceType, ringtoneType, path, null, gain, looping, usage)
+    ) = PlatformPlayRequest(
+        sourceType = sourceType,
+        ringtoneType = ringtoneType,
+        path = path,
+        gain = gain,
+        looping = looping,
+        usage = usage,
+    )
 
     private fun fileRequest(usage: PlatformSoundUsage = PlatformSoundUsage.NOTIFICATION) = request(
         PlatformSourceType.FILE,

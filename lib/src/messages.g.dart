@@ -105,6 +105,21 @@ enum PlatformSourceType { system, asset, file }
 
 enum PlatformRingtoneType { alarm, notification, ringtone }
 
+enum PlatformIosSound {
+  newMail,
+  mailSent,
+  receivedMessage,
+  sentMessage,
+  alarm,
+  lowPower,
+  triTone,
+  chime,
+  glass,
+  horn,
+  bell,
+  electronic,
+}
+
 enum PlatformSoundUsage { alarm, notification, ringtone, media }
 
 enum PlatformPlaybackState { playing, completed, stopped }
@@ -113,6 +128,7 @@ class PlatformPlayRequest {
   PlatformPlayRequest({
     required this.sourceType,
     this.ringtoneType,
+    this.iosSound,
     this.path,
     this.packageName,
     required this.gain,
@@ -123,6 +139,9 @@ class PlatformPlayRequest {
   PlatformSourceType sourceType;
 
   PlatformRingtoneType? ringtoneType;
+
+  /// Built-in iOS sound to play instead of the default for [ringtoneType].
+  PlatformIosSound? iosSound;
 
   /// Asset name for [PlatformSourceType.asset], absolute file path for
   /// [PlatformSourceType.file].
@@ -142,6 +161,7 @@ class PlatformPlayRequest {
     return <Object?>[
       sourceType,
       ringtoneType,
+      iosSound,
       path,
       packageName,
       gain,
@@ -159,11 +179,12 @@ class PlatformPlayRequest {
     return PlatformPlayRequest(
       sourceType: result[0]! as PlatformSourceType,
       ringtoneType: result[1] as PlatformRingtoneType?,
-      path: result[2] as String?,
-      packageName: result[3] as String?,
-      gain: result[4]! as double,
-      looping: result[5]! as bool,
-      usage: result[6]! as PlatformSoundUsage,
+      iosSound: result[2] as PlatformIosSound?,
+      path: result[3] as String?,
+      packageName: result[4] as String?,
+      gain: result[5]! as double,
+      looping: result[6]! as bool,
+      usage: result[7]! as PlatformSoundUsage,
     );
   }
 
@@ -178,6 +199,7 @@ class PlatformPlayRequest {
     }
     return _deepEquals(sourceType, other.sourceType) &&
         _deepEquals(ringtoneType, other.ringtoneType) &&
+        _deepEquals(iosSound, other.iosSound) &&
         _deepEquals(path, other.path) &&
         _deepEquals(packageName, other.packageName) &&
         _deepEquals(gain, other.gain) &&
@@ -191,7 +213,7 @@ class PlatformPlayRequest {
 
   @override
   String toString() {
-    return 'PlatformPlayRequest(sourceType: $sourceType, ringtoneType: $ringtoneType, path: $path, packageName: $packageName, gain: $gain, looping: $looping, usage: $usage)';
+    return 'PlatformPlayRequest(sourceType: $sourceType, ringtoneType: $ringtoneType, iosSound: $iosSound, path: $path, packageName: $packageName, gain: $gain, looping: $looping, usage: $usage)';
   }
 }
 
@@ -208,14 +230,17 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is PlatformRingtoneType) {
       buffer.putUint8(130);
       writeValue(buffer, value.index);
-    } else if (value is PlatformSoundUsage) {
+    } else if (value is PlatformIosSound) {
       buffer.putUint8(131);
       writeValue(buffer, value.index);
-    } else if (value is PlatformPlaybackState) {
+    } else if (value is PlatformSoundUsage) {
       buffer.putUint8(132);
       writeValue(buffer, value.index);
-    } else if (value is PlatformPlayRequest) {
+    } else if (value is PlatformPlaybackState) {
       buffer.putUint8(133);
+      writeValue(buffer, value.index);
+    } else if (value is PlatformPlayRequest) {
+      buffer.putUint8(134);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -233,11 +258,14 @@ class _PigeonCodec extends StandardMessageCodec {
         return value == null ? null : PlatformRingtoneType.values[value];
       case 131:
         final value = readValue(buffer) as int?;
-        return value == null ? null : PlatformSoundUsage.values[value];
+        return value == null ? null : PlatformIosSound.values[value];
       case 132:
         final value = readValue(buffer) as int?;
-        return value == null ? null : PlatformPlaybackState.values[value];
+        return value == null ? null : PlatformSoundUsage.values[value];
       case 133:
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PlatformPlaybackState.values[value];
+      case 134:
         return PlatformPlayRequest.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);

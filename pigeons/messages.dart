@@ -21,6 +21,21 @@ enum PlatformSourceType { system, asset, file }
 
 enum PlatformRingtoneType { alarm, notification, ringtone }
 
+enum PlatformIosSound {
+  newMail,
+  mailSent,
+  receivedMessage,
+  sentMessage,
+  alarm,
+  lowPower,
+  triTone,
+  chime,
+  glass,
+  horn,
+  bell,
+  electronic,
+}
+
 enum PlatformSoundUsage { alarm, notification, ringtone, media }
 
 enum PlatformPlaybackState { playing, completed, stopped }
@@ -35,6 +50,9 @@ class PlatformPlayRequest {
 
   PlatformSourceType sourceType;
   PlatformRingtoneType? ringtoneType;
+
+  /// Built-in iOS sound to play instead of the default for [ringtoneType].
+  PlatformIosSound? iosSound;
 
   /// Asset name for [PlatformSourceType.asset], absolute file path for
   /// [PlatformSourceType.file].

@@ -62,6 +62,21 @@ final class RingtonePlayerTests: XCTestCase {
     XCTAssertEqual(listener.states, [.playing, .stopped, .playing, .stopped, .playing])
   }
 
+  func testEveryIosSystemSoundFileExists() {
+    for sound in PlatformIosSound.allCases {
+      let url = RingtonePlayer.systemSoundsDirectory.appendingPathComponent(RingtonePlayer.soundFile(for: sound))
+      XCTAssertTrue(FileManager.default.isReadableFile(atPath: url.path), "\(sound) is missing at \(url.path)")
+    }
+  }
+
+  func testPlaysAChosenIosSound() async throws {
+    try await player.play(request: PlatformPlayRequest(
+      sourceType: .system, ringtoneType: .notification, iosSound: .glass, gain: 0.1, looping: false,
+      usage: .notification))
+
+    XCTAssertEqual(listener.states, [.playing])
+  }
+
   func testMissingFileIsSourceNotFound() async {
     await assertPigeonError(errorSourceNotFound) {
       try await self.player.play(request: self.fileRequest(URL(fileURLWithPath: "/missing/sound.wav")))

@@ -104,7 +104,8 @@ final class RingtonePlayer: NSObject, RingtonePlayerHostApi {
       guard let type = request.ringtoneType else {
         throw PigeonError(code: errorPlaybackFailed, message: "Missing ringtone type", details: nil)
       }
-      let url = Self.systemSoundsDirectory.appendingPathComponent(Self.systemSoundFile(for: type))
+      let sound = request.iosSound ?? Self.defaultIosSound(for: type)
+      let url = Self.systemSoundsDirectory.appendingPathComponent(Self.soundFile(for: sound))
       return try readableFile(url.path, notFound: "System sound \(url.lastPathComponent) is not available")
     case .asset:
       guard let name = request.path, let path = assetPath(name, request.packageName) else {
@@ -124,11 +125,28 @@ final class RingtonePlayer: NSObject, RingtonePlayerHostApi {
     return URL(fileURLWithPath: path)
   }
 
-  static func systemSoundFile(for type: PlatformRingtoneType) -> String {
+  static func defaultIosSound(for type: PlatformRingtoneType) -> PlatformIosSound {
     switch type {
+    case .alarm: return .alarm
+    case .notification: return .triTone
+    case .ringtone: return .electronic
+    }
+  }
+
+  static func soundFile(for sound: PlatformIosSound) -> String {
+    switch sound {
+    case .newMail: return "new-mail.caf"
+    case .mailSent: return "mail-sent.caf"
+    case .receivedMessage: return "ReceivedMessage.caf"
+    case .sentMessage: return "SentMessage.caf"
     case .alarm: return "alarm.caf"
-    case .notification: return "sms-received1.caf"
-    case .ringtone: return "sms-received6.caf"
+    case .lowPower: return "low_power.caf"
+    case .triTone: return "sms-received1.caf"
+    case .chime: return "sms-received2.caf"
+    case .glass: return "sms-received3.caf"
+    case .horn: return "sms-received4.caf"
+    case .bell: return "sms-received5.caf"
+    case .electronic: return "sms-received6.caf"
     }
   }
 

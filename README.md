@@ -36,6 +36,42 @@ await player.play(
 `player.stateChanges` reports when a sound starts, completes or is stopped.
 Failures are thrown as `RingtoneException` with a `RingtoneErrorCode`.
 
+## Migrating from flutter_ringtone_player
+
+Replace the dependency and the import. The rest of your code keeps working:
+
+```yaml
+dependencies:
+  flutter_ringtone_player_plus: ^1.0.0
+```
+
+```dart
+// Before
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+
+// After
+import 'package:flutter_ringtone_player_plus/flutter_ringtone_player.dart';
+```
+
+What changes in behavior:
+
+- Failures throw a `RingtoneException` instead of being silently ignored.
+- `stop()`, looping and volume also work on iOS.
+- `fromFile` needs an absolute path or a `file://` URI.
+- `IosSounds.voicemail` and custom `IosSound` IDs play the default iOS sound
+  for the call, because current iOS versions no longer ship those sounds.
+
+For new code, the main API maps like this:
+
+| flutter_ringtone_player | flutter_ringtone_player_plus |
+| --- | --- |
+| `FlutterRingtonePlayer().playAlarm()` | `RingtonePlayer().playAlarm()` |
+| `play(fromAsset: 'a.mp3')` | `play(RingtoneSource.asset('a.mp3'))` |
+| `play(fromFile: path)` | `play(RingtoneSource.file(path))` |
+| `play(android: AndroidSounds.notification, ios: IosSounds.glass)` | `play(RingtoneSource.system(RingtoneType.notification, iosSound: IosSystemSound.glass))` |
+| `volume: 0.5` (linear) | `PlaybackOptions(volume: 0.5)` (perceptual) |
+| `asAlarm: true` | `PlaybackOptions(usage: SoundUsage.alarm)` |
+
 ## Why this package
 
 [`flutter_ringtone_player`](https://pub.dev/packages/flutter_ringtone_player)
@@ -78,7 +114,7 @@ Problems found in `flutter_ringtone_player` 4.0.0+4 that this package addresses:
 - [x] iOS: Swift player based on `AVAudioPlayer`, with playback state
 - [x] iOS: interruptions, privacy manifest, Swift Package Manager and CocoaPods
 - [x] Example app and integration tests
-- [ ] Compatibility layer and migration guide from `flutter_ringtone_player`
+- [x] Compatibility layer and migration guide from `flutter_ringtone_player`
 - [ ] Full CI: platform builds, pub.dev score check, coverage
 - [ ] macOS and web support
 - [ ] 1.0.0 release

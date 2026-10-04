@@ -226,6 +226,27 @@ enum class PlatformRingtoneType(val raw: Int) {
   }
 }
 
+enum class PlatformIosSound(val raw: Int) {
+  NEW_MAIL(0),
+  MAIL_SENT(1),
+  RECEIVED_MESSAGE(2),
+  SENT_MESSAGE(3),
+  ALARM(4),
+  LOW_POWER(5),
+  TRI_TONE(6),
+  CHIME(7),
+  GLASS(8),
+  HORN(9),
+  BELL(10),
+  ELECTRONIC(11);
+
+  companion object {
+    fun ofRaw(raw: Int): PlatformIosSound? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
 enum class PlatformSoundUsage(val raw: Int) {
   ALARM(0),
   NOTIFICATION(1),
@@ -255,6 +276,8 @@ enum class PlatformPlaybackState(val raw: Int) {
 data class PlatformPlayRequest (
   val sourceType: PlatformSourceType,
   val ringtoneType: PlatformRingtoneType? = null,
+  /** Built-in iOS sound to play instead of the default for [ringtoneType]. */
+  val iosSound: PlatformIosSound? = null,
   /**
    * Asset name for [PlatformSourceType.asset], absolute file path for
    * [PlatformSourceType.file].
@@ -272,18 +295,20 @@ data class PlatformPlayRequest (
     fun fromList(pigeonVar_list: List<Any?>): PlatformPlayRequest {
       val sourceType = pigeonVar_list[0] as PlatformSourceType
       val ringtoneType = pigeonVar_list[1] as PlatformRingtoneType?
-      val path = pigeonVar_list[2] as String?
-      val packageName = pigeonVar_list[3] as String?
-      val gain = pigeonVar_list[4] as Double
-      val looping = pigeonVar_list[5] as Boolean
-      val usage = pigeonVar_list[6] as PlatformSoundUsage
-      return PlatformPlayRequest(sourceType, ringtoneType, path, packageName, gain, looping, usage)
+      val iosSound = pigeonVar_list[2] as PlatformIosSound?
+      val path = pigeonVar_list[3] as String?
+      val packageName = pigeonVar_list[4] as String?
+      val gain = pigeonVar_list[5] as Double
+      val looping = pigeonVar_list[6] as Boolean
+      val usage = pigeonVar_list[7] as PlatformSoundUsage
+      return PlatformPlayRequest(sourceType, ringtoneType, iosSound, path, packageName, gain, looping, usage)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
       sourceType,
       ringtoneType,
+      iosSound,
       path,
       packageName,
       gain,
@@ -299,13 +324,14 @@ data class PlatformPlayRequest (
       return true
     }
     val other = other as PlatformPlayRequest
-    return MessagesPigeonUtils.deepEquals(this.sourceType, other.sourceType) && MessagesPigeonUtils.deepEquals(this.ringtoneType, other.ringtoneType) && MessagesPigeonUtils.deepEquals(this.path, other.path) && MessagesPigeonUtils.deepEquals(this.packageName, other.packageName) && MessagesPigeonUtils.deepEquals(this.gain, other.gain) && MessagesPigeonUtils.deepEquals(this.looping, other.looping) && MessagesPigeonUtils.deepEquals(this.usage, other.usage)
+    return MessagesPigeonUtils.deepEquals(this.sourceType, other.sourceType) && MessagesPigeonUtils.deepEquals(this.ringtoneType, other.ringtoneType) && MessagesPigeonUtils.deepEquals(this.iosSound, other.iosSound) && MessagesPigeonUtils.deepEquals(this.path, other.path) && MessagesPigeonUtils.deepEquals(this.packageName, other.packageName) && MessagesPigeonUtils.deepEquals(this.gain, other.gain) && MessagesPigeonUtils.deepEquals(this.looping, other.looping) && MessagesPigeonUtils.deepEquals(this.usage, other.usage)
   }
 
   override fun hashCode(): Int {
     var result = javaClass.hashCode()
     result = 31 * result + MessagesPigeonUtils.deepHash(this.sourceType)
     result = 31 * result + MessagesPigeonUtils.deepHash(this.ringtoneType)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.iosSound)
     result = 31 * result + MessagesPigeonUtils.deepHash(this.path)
     result = 31 * result + MessagesPigeonUtils.deepHash(this.packageName)
     result = 31 * result + MessagesPigeonUtils.deepHash(this.gain)
@@ -314,7 +340,7 @@ data class PlatformPlayRequest (
     return result
   }
   override fun toString(): String {
-    return "PlatformPlayRequest(sourceType=$sourceType, ringtoneType=$ringtoneType, path=$path, packageName=$packageName, gain=$gain, looping=$looping, usage=$usage)"
+    return "PlatformPlayRequest(sourceType=$sourceType, ringtoneType=$ringtoneType, iosSound=$iosSound, path=$path, packageName=$packageName, gain=$gain, looping=$looping, usage=$usage)"
   }
 }
 private open class MessagesPigeonCodec : StandardMessageCodec() {
@@ -332,15 +358,20 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
       }
       131.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PlatformSoundUsage.ofRaw(it.toInt())
+          PlatformIosSound.ofRaw(it.toInt())
         }
       }
       132.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PlatformPlaybackState.ofRaw(it.toInt())
+          PlatformSoundUsage.ofRaw(it.toInt())
         }
       }
       133.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          PlatformPlaybackState.ofRaw(it.toInt())
+        }
+      }
+      134.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PlatformPlayRequest.fromList(it)
         }
@@ -358,16 +389,20 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
         stream.write(130)
         writeValue(stream, value.raw.toLong())
       }
-      is PlatformSoundUsage -> {
+      is PlatformIosSound -> {
         stream.write(131)
         writeValue(stream, value.raw.toLong())
       }
-      is PlatformPlaybackState -> {
+      is PlatformSoundUsage -> {
         stream.write(132)
         writeValue(stream, value.raw.toLong())
       }
-      is PlatformPlayRequest -> {
+      is PlatformPlaybackState -> {
         stream.write(133)
+        writeValue(stream, value.raw.toLong())
+      }
+      is PlatformPlayRequest -> {
+        stream.write(134)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)

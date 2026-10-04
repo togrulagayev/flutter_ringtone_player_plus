@@ -200,6 +200,21 @@ enum PlatformRingtoneType: Int, CaseIterable {
   case ringtone = 2
 }
 
+enum PlatformIosSound: Int, CaseIterable {
+  case newMail = 0
+  case mailSent = 1
+  case receivedMessage = 2
+  case sentMessage = 3
+  case alarm = 4
+  case lowPower = 5
+  case triTone = 6
+  case chime = 7
+  case glass = 8
+  case horn = 9
+  case bell = 10
+  case electronic = 11
+}
+
 enum PlatformSoundUsage: Int, CaseIterable {
   case alarm = 0
   case notification = 1
@@ -217,6 +232,8 @@ enum PlatformPlaybackState: Int, CaseIterable {
 struct PlatformPlayRequest: Hashable, CustomStringConvertible {
   var sourceType: PlatformSourceType
   var ringtoneType: PlatformRingtoneType? = nil
+  /// Built-in iOS sound to play instead of the default for [ringtoneType].
+  var iosSound: PlatformIosSound? = nil
   /// Asset name for [PlatformSourceType.asset], absolute file path for
   /// [PlatformSourceType.file].
   var path: String? = nil
@@ -232,15 +249,17 @@ struct PlatformPlayRequest: Hashable, CustomStringConvertible {
   static func fromList(_ pigeonVar_list: [Any?]) -> PlatformPlayRequest? {
     let sourceType = pigeonVar_list[0] as! PlatformSourceType
     let ringtoneType: PlatformRingtoneType? = nilOrValue(pigeonVar_list[1])
-    let path: String? = nilOrValue(pigeonVar_list[2])
-    let packageName: String? = nilOrValue(pigeonVar_list[3])
-    let gain = pigeonVar_list[4] as! Double
-    let looping = pigeonVar_list[5] as! Bool
-    let usage = pigeonVar_list[6] as! PlatformSoundUsage
+    let iosSound: PlatformIosSound? = nilOrValue(pigeonVar_list[2])
+    let path: String? = nilOrValue(pigeonVar_list[3])
+    let packageName: String? = nilOrValue(pigeonVar_list[4])
+    let gain = pigeonVar_list[5] as! Double
+    let looping = pigeonVar_list[6] as! Bool
+    let usage = pigeonVar_list[7] as! PlatformSoundUsage
 
     return PlatformPlayRequest(
       sourceType: sourceType,
       ringtoneType: ringtoneType,
+      iosSound: iosSound,
       path: path,
       packageName: packageName,
       gain: gain,
@@ -252,6 +271,7 @@ struct PlatformPlayRequest: Hashable, CustomStringConvertible {
     return [
       sourceType,
       ringtoneType,
+      iosSound,
       path,
       packageName,
       gain,
@@ -263,13 +283,14 @@ struct PlatformPlayRequest: Hashable, CustomStringConvertible {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return MessagesPigeonInternal.deepEquals(lhs.sourceType, rhs.sourceType) && MessagesPigeonInternal.deepEquals(lhs.ringtoneType, rhs.ringtoneType) && MessagesPigeonInternal.deepEquals(lhs.path, rhs.path) && MessagesPigeonInternal.deepEquals(lhs.packageName, rhs.packageName) && MessagesPigeonInternal.deepEquals(lhs.gain, rhs.gain) && MessagesPigeonInternal.deepEquals(lhs.looping, rhs.looping) && MessagesPigeonInternal.deepEquals(lhs.usage, rhs.usage)
+    return MessagesPigeonInternal.deepEquals(lhs.sourceType, rhs.sourceType) && MessagesPigeonInternal.deepEquals(lhs.ringtoneType, rhs.ringtoneType) && MessagesPigeonInternal.deepEquals(lhs.iosSound, rhs.iosSound) && MessagesPigeonInternal.deepEquals(lhs.path, rhs.path) && MessagesPigeonInternal.deepEquals(lhs.packageName, rhs.packageName) && MessagesPigeonInternal.deepEquals(lhs.gain, rhs.gain) && MessagesPigeonInternal.deepEquals(lhs.looping, rhs.looping) && MessagesPigeonInternal.deepEquals(lhs.usage, rhs.usage)
   }
 
   func hash(into hasher: inout Hasher) {
     hasher.combine("PlatformPlayRequest")
     MessagesPigeonInternal.deepHash(value: sourceType, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: ringtoneType, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: iosSound, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: path, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: packageName, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: gain, hasher: &hasher)
@@ -278,7 +299,7 @@ struct PlatformPlayRequest: Hashable, CustomStringConvertible {
   }
 
   public var description: String {
-    return "PlatformPlayRequest(sourceType: \(String(describing: sourceType)), ringtoneType: \(String(describing: ringtoneType)), path: \(String(describing: path)), packageName: \(String(describing: packageName)), gain: \(String(describing: gain)), looping: \(String(describing: looping)), usage: \(String(describing: usage)))"
+    return "PlatformPlayRequest(sourceType: \(String(describing: sourceType)), ringtoneType: \(String(describing: ringtoneType)), iosSound: \(String(describing: iosSound)), path: \(String(describing: path)), packageName: \(String(describing: packageName)), gain: \(String(describing: gain)), looping: \(String(describing: looping)), usage: \(String(describing: usage)))"
   }
 }
 
@@ -300,16 +321,22 @@ private class MessagesPigeonCodecReader: FlutterStandardReader {
     case 131:
       let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
       if let enumResultAsInt = enumResultAsInt {
-        return PlatformSoundUsage(rawValue: enumResultAsInt)
+        return PlatformIosSound(rawValue: enumResultAsInt)
       }
       return nil
     case 132:
       let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
       if let enumResultAsInt = enumResultAsInt {
-        return PlatformPlaybackState(rawValue: enumResultAsInt)
+        return PlatformSoundUsage(rawValue: enumResultAsInt)
       }
       return nil
     case 133:
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return PlatformPlaybackState(rawValue: enumResultAsInt)
+      }
+      return nil
+    case 134:
       return PlatformPlayRequest.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
@@ -325,14 +352,17 @@ private class MessagesPigeonCodecWriter: FlutterStandardWriter {
     } else if let value = value as? PlatformRingtoneType {
       super.writeByte(130)
       super.writeValue(value.rawValue)
-    } else if let value = value as? PlatformSoundUsage {
+    } else if let value = value as? PlatformIosSound {
       super.writeByte(131)
       super.writeValue(value.rawValue)
-    } else if let value = value as? PlatformPlaybackState {
+    } else if let value = value as? PlatformSoundUsage {
       super.writeByte(132)
       super.writeValue(value.rawValue)
-    } else if let value = value as? PlatformPlayRequest {
+    } else if let value = value as? PlatformPlaybackState {
       super.writeByte(133)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? PlatformPlayRequest {
+      super.writeByte(134)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
