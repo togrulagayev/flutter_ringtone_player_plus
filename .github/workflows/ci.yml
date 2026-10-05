@@ -161,14 +161,14 @@ jobs:
           xcrun simctl list devices | grep "$udid"
           echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
 
-      - name: Install pods
-        working-directory: example
-        run: flutter build ios --simulator --debug --config-only
-
       - name: Run integration tests
         working-directory: example
         timeout-minutes: 20
         run: flutter test integration_test -d "$SIMULATOR" --verbose
+
+      - name: Prepare the Xcode project
+        working-directory: example
+        run: flutter build ios --simulator --debug --config-only
 
       - name: Run unit tests
         working-directory: example/ios
