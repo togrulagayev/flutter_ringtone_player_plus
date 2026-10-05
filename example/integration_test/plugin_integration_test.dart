@@ -39,7 +39,7 @@ void main() {
     for (final type in RingtoneType.values) {
       await player.play(
         RingtoneSource.system(type),
-        options: const PlaybackOptions(volume: 0.2),
+        options: const PlaybackOptions(volume: 0.2, looping: true),
       );
     }
 
