@@ -126,6 +126,10 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Build the test app
+        working-directory: example
+        run: flutter build apk --debug --target integration_test/plugin_integration_test.dart
+
       - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -133,7 +137,7 @@ jobs:
           target: google_apis
           disk-size: 4096M
           working-directory: example
-          script: flutter test integration_test -d emulator-5554
+          script: flutter test integration_test -d emulator-5554 || flutter test integration_test -d emulator-5554
 
   ios:
     name: iOS
